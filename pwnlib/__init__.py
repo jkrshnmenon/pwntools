@@ -23,6 +23,7 @@ __all__ = [
     'libcdb',
     'log',
     'memleak',
+    'monitored_process',
     'pep237',
     'regsort',
     'replacements',
