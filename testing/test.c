@@ -27,13 +27,17 @@ int main() {
 	setvbuf(stdout, NULL, _IONBF, 0);
 	setvbuf(stderr, NULL, _IONBF, 0);
 	char buf[0x100];
-	while (1) {
+	int flag = 1;
+	while (flag) {
 		int choice = menu();
 		switch (choice) {
 			case 1: do_read(buf); break;
 			case 2: do_write(buf); break;
-			default: printf("INVALID\n"); return 0;
+			default: printf("INVALID\n"); flag = 0;
 		}
 	}
+	puts("Confirm (Y/N)");
+	char ch;
+	scanf("%c", &ch);
 	return 0;
 }
