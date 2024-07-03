@@ -23,6 +23,9 @@ class monitored_process(Logger):
 
         Logger.__init__(self, None)
         self.setLevel(logging.DEBUG)
+        
+        # Attach GDB to the process
+        self.gdb_pid,self.gdb = gdb.attach(self.proc, exe=self.proc.argv[0], gdbscript="continue", api=True)
     
     def sendline(self, data: bytes):
         """Send a line to the process.
@@ -43,4 +46,12 @@ class monitored_process(Logger):
         data = self.proc.recvline(*args, **kwargs)
         self.debug("Received data:")
         self.maybe_hexdump(data, level=logging.DEBUG)
+        
+        # Monitor for pattern
+        if self.pattern in data:
+            self.debug(f"Pattern detected: {self.pattern}")
+            command = 'break *0x%x' %self.address 
+            self.debug(command)
+            self.gdb.execute('break *0x%x' %self.address )
+        
         return data

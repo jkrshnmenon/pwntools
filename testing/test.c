@@ -32,7 +32,7 @@ int main() {
 		switch (choice) {
 			case 1: do_read(buf); break;
 			case 2: do_write(buf); break;
-			default: printf("INVALID\n"); return 0;
+			default: printf("INVALID\n"); continue;
 		}
 	}
 	return 0;
