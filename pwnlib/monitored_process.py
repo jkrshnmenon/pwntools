@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
+import time
 from pwnlib import gdb
 from pwnlib import tubes
 from pwnlib.log import Logger
@@ -46,7 +47,7 @@ class monitored_process(Logger):
         self.setLevel(logging.DEBUG)
         
         # Attach GDB to the process
-        self.gdb_pid, self.gdb = gdb.attach(self.proc, exe=self.proc.argv[0], gdbscript="continue", api=True)
+        self.gdb_pid, self.gdb = gdb.attach(self.proc, exe=self.proc.argv[0], api=True)
         
         # Get the ELF object for the process
         self.elf = ELF(self.proc.argv[0])
@@ -61,6 +62,7 @@ class monitored_process(Logger):
                 plt_address = self.elf.plt[func]
                 self.debug(f"Setting breakpoint at {func} in PLT at {hex(plt_address)}")
                 self.gdb.execute(f'break *{hex(plt_address)}')
+        self.gdb.execute("continue")
     
     def sendline(self, data: bytes):
         """Send a line to the process.
@@ -78,15 +80,27 @@ class monitored_process(Logger):
         Returns:
             bytes: The data received from the process.
         """
+        if self.gdb.stopped.wait(timeout=1.0) is False:
+            self.debug("Timed out")
+            data = self.proc.recvline(*args, **kwargs)
+            self.debug("Received data:")
+            self.maybe_hexdump(data, level=logging.DEBUG)
+            return data
+
+        self.debug(f"Stopped: {self.gdb.stopped.is_set()}")
+        self.gdb.execute("finish")
         data = self.proc.recvline(*args, **kwargs)
         self.debug("Received data:")
         self.maybe_hexdump(data, level=logging.DEBUG)
-        
+
         # Monitor for pattern
         if self.pattern in data:
             self.debug(f"Pattern detected: {self.pattern}")
             command = 'break *0x%x' % self.address
-            self.debug(command)
+            self.debug(f"Running {command=}")
             self.gdb.execute(command)
-        
+
+        self.gdb.stopped.clear()
+        self.debug("Continuing")
+        self.gdb.execute("continue")
         return data
