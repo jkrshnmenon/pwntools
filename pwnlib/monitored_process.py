@@ -22,7 +22,15 @@ class monitored_process(Logger):
         'write', 'pwrite', 'writev', 'pwritev', 'send', 'sendto', 'sendmsg',
         'putc_unlocked', 'putw', 'putwc', 'putws'
     ]
-
+    reading_functions = [
+        'scanf', 'fscanf', 'sscanf', 'vscanf', 'vfscanf', 'vsscanf',
+        'fgetc', 'fgets', 'fread', 'fgetwc', 'fgetws',
+        'getc', 'gets', 'getchar', 'ungetc', 'getwc', 'getwchar',
+        'read', 'pread', 'readv', 'preadv',
+        'getline', 'getdelim', 'fgets_unlocked', 'getchar_unlocked', 'getc_unlocked',
+        'recv', 'recvfrom', 'recvmsg'
+    ]
+    
     def __init__(self, pattern: bytes, address: int, *args, **kwargs):
         """Monitors a process for a pattern in the communication stream and breakpoints at an address when this pattern is detected.
 
